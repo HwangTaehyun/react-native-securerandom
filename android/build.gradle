@@ -10,13 +10,13 @@ buildscript {
 
         dependencies {
             //noinspection GradleDependency
-            classpath("com.android.tools.build:gradle:3.5.2")
+            classpath("com.android.tools.build:gradle:7.0.0")
         }
     }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -81,49 +81,6 @@ def configureReactNativePom(def pom) {
                 id packageJson.author.url
                 name packageJson.author.name
             }
-        }
-    }
-}
-
-afterEvaluate { project ->
-
-    task androidJavadoc(type: Javadoc) {
-        source = android.sourceSets.main.java.srcDirs
-        classpath += files(android.bootClasspath)
-        classpath += files(project.getConfigurations().getByName('compile').asList())
-        include '**/*.java'
-    }
-
-    task androidJavadocJar(type: Jar, dependsOn: androidJavadoc) {
-        classifier = 'javadoc'
-        from androidJavadoc.destinationDir
-    }
-
-    task androidSourcesJar(type: Jar) {
-        classifier = 'sources'
-        from android.sourceSets.main.java.srcDirs
-        include '**/*.java'
-    }
-
-    android.libraryVariants.all { variant ->
-        def name = variant.name.capitalize()
-        task "jar${name}"(type: Jar, dependsOn: variant.javaCompile) {
-            from variant.javaCompile.destinationDir
-        }
-    }
-
-    artifacts {
-        archives androidSourcesJar
-        archives androidJavadocJar
-    }
-
-    task installArchives(type: Upload) {
-        configuration = configurations.archives
-        repositories.mavenDeployer {
-            // Deploy to react-native-event-bridge/maven, ready to publish to npm
-            repository url: "file://${projectDir}/../android/maven"
-
-            configureReactNativePom pom
         }
     }
 }
